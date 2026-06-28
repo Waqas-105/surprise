@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Countdown & Fireworks</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Quicksand:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+:root{
+  --ink:#15110F;
+  --ink-soft:#251D1B;
+  --pink:#FF4F87;
+  --pink-deep:#D8336B;
+  --pink-soft:#FFD3E4;
+  --blush:#FFF1F6;
+  --paper:#FFFBF8;
+  --plum:#7B3FA0;
+  --sky:#4FA3FF;
+  --crimson:#E2384A;
+  --gold:#E7B873;
+  --line: rgba(255,255,255,0.14);
+  --font-display:'Fraunces', serif;
+  --font-body:'Quicksand', sans-serif;
+  --font-script:'Caveat', cursive;
+  --container: min(1080px, 92vw);
+}
+
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  background:var(--ink);
+  color:var(--paper);
+  font-family:var(--font-body);
+  font-weight:500;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+h1,h2,h3{ font-family:var(--font-display); margin:0; font-weight:600; }
+p{ margin:0; line-height:1.6; }
+button{ font-family:inherit; cursor:pointer; }
+::selection{ background:var(--pink); color:var(--ink); }
+
+.container{ width:var(--container); margin:0 auto; }
+:focus-visible{ outline:2px solid var(--pink); outline-offset:3px; border-radius:4px; }
+
+/* Fireworks Canvas - Background */
+#fireworksCanvas{ 
+  position:fixed; 
+  inset:0; 
+  width:100%; 
+  height:100%; 
+  pointer-events:none; 
+  z-index:1; 
+}
+
+/* Countdown - Foreground */
+.countdown-section{
+  position:relative;
+  z-index:2;
+  text-align:center;
+  padding:3rem 2rem;
+}
+
+.countdown-wrap{
+  max-width:720px; 
+  margin:0 auto; 
+  background:rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border:1px solid rgba(255,255,255,0.18); 
+  border-radius:24px; 
+  padding:2.4rem;
+  box-shadow: 
+    0 0 15px rgba(255, 79, 135, 0.2),
+    0 0 35px rgba(123, 63, 160, 0.15),
+    0 0 70px rgba(255, 211, 228, 0.1),
+    0 20px 50px rgba(0, 0, 0, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.25);
+}
+
+.countdown-label{ 
+  font-family:var(--font-script); 
+  font-size:clamp(1.4rem, 3vw, 1.8rem); 
+  color:var(--pink-soft); 
+  margin-bottom:1.2rem; 
+}
+
+.countdown-numbers{ 
+  display:flex; 
+  justify-content:center; 
+  gap:1.5rem; 
+  flex-wrap:wrap; 
+  margin-bottom: 2rem;
+}
+
+.countdown-item{ 
+  text-align:center; 
+}
+
+.countdown-value{
+  font-family:var(--font-display); 
+  font-size:clamp(2rem, 5vw, 2.8rem); 
+  font-weight:700;
+  background:linear-gradient(135deg, var(--pink), var(--plum));
+  -webkit-background-clip:text; 
+  background-clip:text; 
+  color:transparent;
+  display:block;
+}
+
+.countdown-unit{ 
+  font-size:.75rem; 
+  color:rgba(255,251,248,.6); 
+  letter-spacing:.1em; 
+  text-transform:uppercase; 
+  margin-top: .3rem;
+  display: block;
+}
+
+.fireworks-btn{
+  padding:1rem 2.6rem; 
+  border-radius:50px; 
+  border:none; 
+  background:linear-gradient(135deg,var(--pink),var(--plum));
+  color:#fff; 
+  font-family:var(--font-body); 
+  font-weight:700; 
+  letter-spacing:.08em; 
+  text-transform:uppercase;
+  font-size:.9rem; 
+  cursor:pointer; 
+  position:relative; 
+  z-index:3; 
+  transition:transform .25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: .6rem;
+  margin-top: 2rem;
+}
+
+.fireworks-btn:hover{ 
+  transform:translateY(-3px) scale(1.04); 
+  box-shadow: 0 12px 30px -8px rgba(255,79,135,.5);
+}
+
+.calendar-note{
+  margin-top:1.5rem; 
+  text-align:center; 
+  font-family:var(--font-script);
+  font-size:clamp(1.1rem, 2.4vw, 1.3rem); 
+  color:var(--pink-deep);
+}
+
+@media (max-width: 600px){
+  .countdown-numbers{ gap: 1rem; }
+  .countdown-wrap{ padding: 1.8rem 1.2rem; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="fireworksCanvas"></canvas>
+
+<div class="countdown-section">
+  <div class="countdown-wrap">
+    <div class="countdown-label">Counting down to your day...</div>
+    <div class="countdown-numbers" id="countdownNumbers"></div>
+  </div>
+  <button class="fireworks-btn" id="fireworksBtn">
+    <i class="fa-solid fa-star"></i>
+    <span>Light Up The Sky</span>
+  </button>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+function updateCountdown(){
+  var birthday = new Date(2026, 6, 27);
+  var now = new Date();
+  var diff = birthday - now;
+
+  if (diff <= 0) {
+    document.getElementById('countdownNumbers').innerHTML = '<div style="font-family:var(--font-script);font-size:clamp(1.4rem, 3vw, 1.8rem);color:var(--pink-deep);">🎉 Today is the day! 🎉</div>';
+    return;
+  }
+
+  var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  var seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+  document.getElementById('countdownNumbers').innerHTML = 
+    '<div class="countdown-item"><span class="countdown-value">' + days + '</span><span class="countdown-unit">Days</span></div>' +
+    '<div class="countdown-item"><span class="countdown-value">' + hours + '</span><span class="countdown-unit">Hours</span></div>' +
+    '<div class="countdown-item"><span class="countdown-value">' + minutes + '</span><span class="countdown-unit">Minutes</span></div>' +
+    '<div class="countdown-item"><span class="countdown-value">' + seconds + '</span><span class="countdown-unit">Seconds</span></div>';
+}
+
+function setupFireworks(){
+  var canvas = document.getElementById('fireworksCanvas');
+  var ctx = canvas.getContext('2d');
+  
+  function resize(){
+    var w = window.innerWidth, h = window.innerHeight;
+    if (w && h){ canvas.width = w; canvas.height = h; }
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  var fireworksArr = [], particles = [];
+  var colors = ['#FF4F87','#7B3FA0','#4FA3FF','#E2384A','#FFD3E4','#E7B873'];
+
+  function hexToRgb(hex){
+    return { r:parseInt(hex.slice(1,3),16), g:parseInt(hex.slice(3,5),16), b:parseInt(hex.slice(5,7),16) };
+  }
+  
+  function Firework(x,y,targetY,color){
+    this.x=x; this.y=y; this.targetY=targetY; this.color=color;
+    this.speed=4+Math.random()*2; this.exploded=false; this.trail=[];
+  }
+  
+  Firework.prototype.update = function(){
+    if (!this.exploded){
+      this.trail.push({ x:this.x, y:this.y, alpha:1 });
+      if (this.trail.length > 10) this.trail.shift();
+      this.y -= this.speed;
+      if (this.y <= this.targetY) this.explode();
+    }
+    this.trail.forEach(function(t){ t.alpha *= 0.9; });
+  };
+  
+  Firework.prototype.explode = function(){
+    this.exploded = true;
+    var count = 60 + Math.floor(Math.random()*30);
+    for (var i=0;i<count;i++){
+      var angle = (Math.PI*2*i)/count, speed = 2+Math.random()*4;
+      particles.push({ 
+        x:this.x, y:this.y, 
+        vx:Math.cos(angle)*speed, 
+        vy:Math.sin(angle)*speed, 
+        alpha:1, color:this.color, 
+        size:2+Math.random()*2, 
+        gravity:0.05 
+      });
+    }
+  };
+  
+  Firework.prototype.draw = function(){
+    var self = this;
+    this.trail.forEach(function(t){
+      ctx.beginPath(); 
+      ctx.arc(t.x, t.y, 2, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(255,255,255,'+t.alpha+')'; 
+      ctx.fill();
+    });
+    if (!self.exploded){
+      ctx.beginPath(); 
+      ctx.arc(self.x, self.y, 3, 0, Math.PI*2);
+      ctx.fillStyle = self.color; 
+      ctx.fill();
+    }
+  };
+  
+  function launch(){
+    var x = Math.random()*canvas.width*0.8 + canvas.width*0.1;
+    var targetY = Math.random()*canvas.height*0.4 + 50;
+    var color = colors[Math.floor(Math.random()*colors.length)];
+    fireworksArr.push(new Firework(x, canvas.height, targetY, color));
+  }
+  
+  var finaleActive = false;
+  
+  document.getElementById('fireworksBtn').addEventListener('click', function(){
+    if (finaleActive) return;
+    finaleActive = true;
+    var count = 0;
+    var iv = setInterval(function(){
+      launch();
+      if (Math.random() > 0.5) launch();
+      count++;
+      if (count > 26){ 
+        clearInterval(iv); 
+        setTimeout(function(){ finaleActive = false; }, 2500); 
+      }
+    }, 320);
+  });
+  
+  function draw(){
+    requestAnimationFrame(draw);
+    if (!canvas.width || !canvas.height) return;
+    ctx.fillStyle = 'rgba(21,17,15,0.2)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    fireworksArr = fireworksArr.filter(function(f){ return !f.exploded || f.trail.length>0; });
+    fireworksArr.forEach(function(f){ f.update(); f.draw(); });
+    particles = particles.filter(function(p){ return p.alpha > 0.05; });
+    particles.forEach(function(p){
+      p.x+=p.vx; 
+      p.y+=p.vy; 
+      p.vy+=p.gravity; 
+      p.vx*=0.99; 
+      p.alpha*=0.98;
+      var rgb = hexToRgb(p.color);
+      ctx.beginPath(); 
+      ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fillStyle = 'rgba('+rgb.r+','+rgb.g+','+rgb.b+','+p.alpha+')';
+      ctx.fill();
+    });
+  }
+  draw();
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+  setupFireworks();
+});
+
+})();
+</script>
+</body>
+</html>
